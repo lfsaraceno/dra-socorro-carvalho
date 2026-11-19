@@ -92,7 +92,7 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .site-header.is-solid { background: var(--bg); box-shadow: 0 1px 0 var(--line); }
 .header-row { display: flex; align-items: center; gap: 24px; height: 76px; }
 .lockup { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
-.lockup-mark { width: 56px; height: 28px; flex: none; }
+.lockup-mark { width: 76px; height: 38px; flex: none; }
 .lockup-text { display: flex; flex-direction: column; line-height: 1.15; }
 .lockup-names { font-weight: 500; font-size: 1rem; }
 .lockup-sub { font-size: .85rem; color: var(--ink-soft); }
@@ -105,7 +105,7 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 }
 @media (max-width: 480px) {
   .lockup-text { display: none; }
-  .lockup-mark { width: 64px; height: 32px; }
+  .lockup-mark { width: 84px; height: 42px; }
 }
 
 /* Intro: hero + abertura */
