@@ -42,8 +42,7 @@
     .fromTo('.lid-up', { y: 24, rotate: 3 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
     .fromTo('.lid-down', { y: -18, rotate: -2 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
     .from('.iris', { scale: 0.4, opacity: 0, duration: 1.2 }, 0.35)
-    .from('.hero-copy > *', { y: 28, opacity: 0, duration: 1, stagger: 0.08 }, 0.1)
-    .from('.scroll-hint', { opacity: 0, duration: 0.8 }, 1.1);
+    .from('.hero-copy > *', { y: 28, opacity: 0, duration: 1, stagger: 0.08 }, 0.1);
 
   // 2. Scroll: as pálpebras se abrem e a íris vira a janela para a seção das médicas
   const intro = document.querySelector('.intro');
@@ -83,7 +82,6 @@
     },
   });
   open
-    .to('.scroll-hint', { opacity: 0, duration: 0.08 }, 0)
     // fromTo explícito: o .to capturaria o estado meio-fechado da animação de entrada
     .fromTo('.lid-up', { y: 0, rotate: 0 }, { y: -70, rotate: -4, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
     .fromTo('.lid-down', { y: 0, rotate: 0 }, { y: 60, rotate: 3, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)

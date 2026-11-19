@@ -117,7 +117,6 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .hero-eye { position: relative; }
 .eye { width: 100%; height: auto; overflow: visible; }
 .eye .lid, .eye .iris { transform-box: fill-box; transform-origin: 50% 50%; }
-.scroll-hint { text-align: center; font-size: .95rem; color: var(--ink-soft); margin-top: 8px; }
 
 .aperture { background: var(--surface); padding-block: 96px; }
 .aperture-tint { display: none; }
