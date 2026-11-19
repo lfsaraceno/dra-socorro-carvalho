@@ -24,119 +24,151 @@
     const aperture = document.querySelector('.aperture');
     const eyeSvg = document.querySelector('.eye');
 
-    // Olho 3D (assets/eye3d.js). Sem WebGL, o logo em SVG continua no lugar.
-    let eye3d = null;
+    // Olho 3D (assets/eye3d.js) a partir de 861px; abaixo disso, ou sem WebGL, o logo em SVG.
+    // gsap.matchMedia refaz as seções 1 e 2 quando a tela cruza o breakpoint, sem precisar recarregar.
     const host3d = document.querySelector('.hero-3d');
-    if (window.Eye3D && host3d && Eye3D.supported()) {
-      try {
-        eye3d = Eye3D.create(host3d, { anchor: document.querySelector('.hero-eye') });
-        document.documentElement.classList.add('has-3d');
-      } catch (err) { eye3d = null; }
-    }
-    // começa explodido, com a frente do olho virada para o texto
-    const ROT0 = -1.05;
-    const s3d = { intro: 0, explode: 1, labels: 1, rot: ROT0, dolly: 0, tour: -1 };
-    // cartões das peças em destaque, de 2 em 2: trocam quando o tour passa para o próximo par
     const partCards = gsap.utils.toArray('.eye-parts li');
-    let partOn = -1;
-    const push3d = () => {
-      if (!eye3d) return;
-      eye3d.update(s3d);
-      const i = Math.floor(s3d.tour);
-      const on = i >= 0 && i * 2 < partCards.length ? i : -1;
-      if (on !== partOn) {
-        partCards.forEach((li, j) => li.classList.toggle('is-on', on >= 0 && Math.floor(j / 2) === on));
-        partOn = on;
+    let eye3dReady = null;
+    const loadEye3d = () => eye3dReady || (eye3dReady = new Promise((done) => {
+      const s = window.eye3dScript || Object.assign(document.createElement('script'), { src: 'assets/eye3d.js' });
+      if (window.Eye3D || s.done) return done();
+      s.addEventListener('load', done, { once: true });
+      s.addEventListener('error', done, { once: true });
+      if (!s.isConnected) document.head.appendChild(s);
+    }));
+    let built = false;
+
+    const build = (want3d) => {
+      let eye3d = null;
+      if (want3d && window.Eye3D && host3d && Eye3D.supported()) {
+        try {
+          eye3d = Eye3D.create(host3d, { anchor: document.querySelector('.hero-eye') });
+          document.documentElement.classList.add('has-3d');
+        } catch (err) { eye3d = null; }
       }
-    };
+      // começa explodido, com a frente do olho virada para o texto
+      const ROT0 = -1.05;
+      const s3d = { intro: 0, explode: 1, labels: 1, rot: ROT0, dolly: 0, tour: -1 };
+      // cartões das peças em destaque, de 2 em 2: trocam quando o tour passa para o próximo par
+      let partOn = -1;
+      const push3d = () => {
+        if (!eye3d) return;
+        eye3d.update(s3d);
+        const i = Math.floor(s3d.tour);
+        const on = i >= 0 && i * 2 < partCards.length ? i : -1;
+        if (on !== partOn) {
+          partCards.forEach((li, j) => li.classList.toggle('is-on', on >= 0 && Math.floor(j / 2) === on));
+          partOn = on;
+        }
+      };
 
-    // 1. Entrada: o olho aparece (3D) ou pisca uma vez (SVG) e o texto sobe
-    const entry = gsap.timeline({ defaults: { ease } });
-    if (eye3d) {
-      push3d();
-      entry.to(s3d, { intro: 1, duration: 1.6, onUpdate: push3d }, 0.1)
-        .from('.eye-labels', { opacity: 0, duration: 0.8 }, 0.9);
-    } else {
-      entry
-        // y em unidades do viewBox (240x120); yPercent em SVG <use> mede o símbolo inteiro e trava
-        .fromTo('.lid-up', { y: 24, rotate: 3 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
-        .fromTo('.lid-down', { y: -18, rotate: -2 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
-        .from('.iris', { scale: 0.4, opacity: 0, duration: 1.2 }, 0.35);
-    }
-    entry.from('.hero-copy > *', { y: 28, opacity: 0, duration: 1, stagger: 0.08 }, 0.1);
-
-    // 2. Scroll: SVG = pálpebras abrem; 3D = volta de 360° com as peças separadas e mergulho na pupila.
-    // Nos dois casos um círculo cresce a partir da íris e revela a seção das médicas.
-    // Mede pelo SVG (sem transform), não pela íris, que pode estar no meio da animação de entrada
-    const geom = () => {
-      const a = intro.getBoundingClientRect();
-      let cx = a.width / 2, cy = Math.min(a.height, window.innerHeight) / 2; // 3D: a pupila termina no centro da tela
-      if (!eye3d) {
-        const s = eyeSvg.getBoundingClientRect();
-        const k = s.width / 240; // viewBox 240x120; íris elíptica em (128, 62), rx 23,75 ry 19,25
-        cx = s.left + 128 * k - a.left;
-        cy = s.top + 62 * k - a.top;
+      // 1. Entrada: o olho aparece (3D) ou pisca uma vez (SVG) e o texto sobe
+      const entry = gsap.timeline({ defaults: { ease } });
+      if (eye3d) {
+        push3d();
+        entry.to(s3d, { intro: 1, duration: 1.6, onUpdate: push3d }, 0.1)
+          .from('.eye-labels', { opacity: 0, duration: 0.8 }, 0.9);
+      } else {
+        entry
+          // y em unidades do viewBox (240x120); yPercent em SVG <use> mede o símbolo inteiro e trava
+          .fromTo('.lid-up', { y: 24, rotate: 3 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
+          .fromTo('.lid-down', { y: -18, rotate: -2 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
+          .from('.iris', { scale: 0.4, opacity: 0, duration: 1.2 }, 0.35);
       }
-      const far = Math.hypot(Math.max(cx, a.width - cx), Math.max(cy, a.height - cy));
-      return { cx, cy, r1: far + 40 };
-    };
-    let g = geom();
-    const place = () => {
-      g = geom();
-      aperture.style.setProperty('--cx', g.cx + 'px');
-      aperture.style.setProperty('--cy', g.cy + 'px');
-    };
-    place();
-    aperture.style.setProperty('--r', '0px');
+      entry.from('.hero-copy > *', { y: 28, opacity: 0, duration: 1, stagger: 0.08 }, 0.1);
 
-    const open = gsap.timeline({
-      defaults: { ease: 'none' },
-      scrollTrigger: {
-        trigger: intro,
-        start: 'top top',
-        end: eye3d ? '+=660%' : '+=170%',
-        pin: true,
-        scrub: 0.6,
-        invalidateOnRefresh: true,
-        onRefreshInit: () => { gsap.set(aperture, { '--r': '0px' }); },
-        onRefresh: () => { place(); if (eye3d) eye3d.resize(); },
-      },
+      // 2. Scroll: SVG = pálpebras abrem; 3D = volta de 360° com as peças separadas e mergulho na pupila.
+      // Nos dois casos um círculo cresce a partir da íris e revela a seção das médicas.
+      // Mede pelo SVG (sem transform), não pela íris, que pode estar no meio da animação de entrada
+      const geom = () => {
+        const a = intro.getBoundingClientRect();
+        let cx = a.width / 2, cy = Math.min(a.height, window.innerHeight) / 2; // 3D: a pupila termina no centro da tela
+        if (!eye3d) {
+          const s = eyeSvg.getBoundingClientRect();
+          const k = s.width / 240; // viewBox 240x120; íris elíptica em (128, 62), rx 23,75 ry 19,25
+          cx = s.left + 128 * k - a.left;
+          cy = s.top + 62 * k - a.top;
+        }
+        const far = Math.hypot(Math.max(cx, a.width - cx), Math.max(cy, a.height - cy));
+        return { cx, cy, r1: far + 40 };
+      };
+      let g = geom();
+      const place = () => {
+        g = geom();
+        aperture.style.setProperty('--cx', g.cx + 'px');
+        aperture.style.setProperty('--cy', g.cy + 'px');
+      };
+      place();
+      aperture.style.setProperty('--r', '0px');
+
+      const open = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: intro,
+          start: 'top top',
+          end: eye3d ? '+=660%' : '+=170%',
+          refreshPriority: 1, // recriado na troca de breakpoint: o pin do hero precisa medir antes dos de baixo
+          pin: true,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+          onRefreshInit: () => { gsap.set(aperture, { '--r': '0px' }); },
+          onRefresh: () => { place(); if (eye3d) eye3d.resize(); },
+        },
+      });
+
+      if (eye3d) {
+        const t = (vars, at) => open.to(s3d, { ...vars, onUpdate: push3d }, at);
+        // tour: duas peças por vez em destaque, com os cartões da descrição (0,12 de timeline por par)
+        const STEPS = Math.ceil(partCards.length / 2), TOUR = (STEPS + 1) * 0.12;
+        t({ tour: STEPS, duration: TOUR, ease: 'none' }, 0);
+        t({ rot: ROT0 + 0.2, duration: TOUR, ease: 'none' }, 0);
+        // no lugar: as peças se juntam enquanto o olho vira de frente; depois a câmera entra pela pupila
+        const T = TOUR + 0.04;
+        t({ rot: 0, duration: 0.42, ease: 'power1.inOut' }, T);
+        t({ labels: 0, duration: 0.1 }, T + 0.14);
+        t({ explode: 0, duration: 0.34, ease: 'power2.inOut' }, T + 0.06);
+        open.to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.1 }, T + 0.46);
+        t({ dolly: 1, duration: 0.24, ease: 'power1.in' }, T + 0.46);
+        open
+          .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.12, ease: 'power2.in' }, T + 0.64)
+          .to('.aperture-tint', { opacity: 0, duration: 0.1 }, T + 0.76)
+          .from('.portrait img', { scale: 1.2, duration: 0.14 }, T + 0.7)
+          .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.08, ease: 'power2.out' }, T + 0.8)
+          .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.08, ease: 'power2.out' }, T + 0.8)
+          .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.015, duration: 0.07, ease: 'power2.out' }, T + 0.8)
+          .to({}, { duration: 0.1 }); // pausa com a seção inteira na tela antes de soltar
+      } else open
+        // fromTo explícito: o .to capturaria o estado meio-fechado da animação de entrada
+        .fromTo('.lid-up', { y: 0, rotate: 0 }, { y: -70, rotate: -4, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
+        .fromTo('.lid-down', { y: 0, rotate: 0 }, { y: 60, rotate: 3, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
+        .to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.35 }, 0.05)
+        // começa em 0: parada no topo, a borda do recorte desenharia um anel fino sobre a íris
+        .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.6, ease: 'power2.in' }, 0.12)
+        .to('.aperture-tint', { opacity: 0, duration: 0.25 }, 0.5)
+        .from('.portrait img', { scale: 1.25, duration: 0.5 }, 0.3)
+        .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.25, ease: 'power2.out' }, 0.62)
+        .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.25, ease: 'power2.out' }, 0.62)
+        .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.04, duration: 0.2, ease: 'power2.out' }, 0.62)
+        .to({}, { duration: 0.18 }); // pausa com a seção inteira na tela antes de soltar
+
+      // na troca de breakpoint a entrada não se repete
+      if (built) entry.progress(1);
+      built = true;
+      return () => {
+        if (eye3d) eye3d.dispose();
+        document.documentElement.classList.remove('has-3d');
+        partCards.forEach((li) => li.classList.remove('is-on'));
+      };
+    };
+
+    gsap.matchMedia().add({ wide: '(min-width: 861px)', narrow: '(max-width: 860px)' }, (ctx) => {
+      if (!ctx.conditions.wide) return build(false);
+      if (window.Eye3D) return build(true);
+      // a tela cresceu depois de abrir no celular: baixa o 3D e monta quando chegar
+      let alive = true, cleanup = null;
+      loadEye3d().then(() => { if (alive) ctx.add(() => { cleanup = build(true); }); });
+      return () => { alive = false; if (cleanup) cleanup(); };
     });
-
-    if (eye3d) {
-      const t = (vars, at) => open.to(s3d, { ...vars, onUpdate: push3d }, at);
-      // tour: duas peças por vez em destaque, com os cartões da descrição (0,12 de timeline por par)
-      const STEPS = Math.ceil(partCards.length / 2), TOUR = (STEPS + 1) * 0.12;
-      t({ tour: STEPS, duration: TOUR, ease: 'none' }, 0);
-      t({ rot: ROT0 + 0.2, duration: TOUR, ease: 'none' }, 0);
-      // no lugar: as peças se juntam enquanto o olho vira de frente; depois a câmera entra pela pupila
-      const T = TOUR + 0.04;
-      t({ rot: 0, duration: 0.42, ease: 'power1.inOut' }, T);
-      t({ labels: 0, duration: 0.1 }, T + 0.14);
-      t({ explode: 0, duration: 0.34, ease: 'power2.inOut' }, T + 0.06);
-      open.to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.1 }, T + 0.46);
-      t({ dolly: 1, duration: 0.24, ease: 'power1.in' }, T + 0.46);
-      open
-        .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.12, ease: 'power2.in' }, T + 0.64)
-        .to('.aperture-tint', { opacity: 0, duration: 0.1 }, T + 0.76)
-        .from('.portrait img', { scale: 1.2, duration: 0.14 }, T + 0.7)
-        .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.08, ease: 'power2.out' }, T + 0.8)
-        .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.08, ease: 'power2.out' }, T + 0.8)
-        .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.015, duration: 0.07, ease: 'power2.out' }, T + 0.8)
-        .to({}, { duration: 0.1 }); // pausa com a seção inteira na tela antes de soltar
-    } else open
-      // fromTo explícito: o .to capturaria o estado meio-fechado da animação de entrada
-      .fromTo('.lid-up', { y: 0, rotate: 0 }, { y: -70, rotate: -4, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
-      .fromTo('.lid-down', { y: 0, rotate: 0 }, { y: 60, rotate: 3, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
-      .to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.35 }, 0.05)
-      // começa em 0: parada no topo, a borda do recorte desenharia um anel fino sobre a íris
-      .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.6, ease: 'power2.in' }, 0.12)
-      .to('.aperture-tint', { opacity: 0, duration: 0.25 }, 0.5)
-      .from('.portrait img', { scale: 1.25, duration: 0.5 }, 0.3)
-      .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.25, ease: 'power2.out' }, 0.62)
-      .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.25, ease: 'power2.out' }, 0.62)
-      .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.04, duration: 0.2, ease: 'power2.out' }, 0.62)
-      .to({}, { duration: 0.18 }); // pausa com a seção inteira na tela antes de soltar
 
     // 3. Exames: a tabela entra em foco e a lente vai de −2,50 a 0,00
     const dioptre = document.querySelector('.dioptre-value');
