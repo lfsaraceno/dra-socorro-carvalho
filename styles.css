@@ -127,10 +127,11 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 /* O retrato faz o papel da íris; as pinceladas do logo ficam acima e abaixo.
    Lid SVG: 170% da largura, proporção 2:1, íris do logo em x=53% (left = 50% - 53,3% de 170%) */
 .portrait { position: relative; margin: 14% 0 10%; width: min(100%, 420px); justify-self: center; }
-.portrait img { border-radius: 50%; aspect-ratio: 1; object-fit: cover; object-position: 50% 30%; width: 100%; }
+/* foto em 84% do quadro (8% de margem): a figura segue quadrada, pálpebras no mesmo lugar, com respiro */
+.portrait img { border-radius: 50%; aspect-ratio: 1; object-fit: cover; object-position: 50% 30%; width: 84%; margin: 8%; }
 .portrait-lid { position: absolute; left: -40.7%; width: 170%; height: auto; pointer-events: none; overflow: visible; }
 .portrait-lid-up { top: -27%; }
-.portrait-lid-down { top: 35%; }
+.portrait-lid-down { top: 37%; }
 
 .doctors { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; border-top: 1px solid var(--line); }
 .doctors li { display: grid; gap: 2px; padding: 18px 0; border-bottom: 1px solid var(--line); }
