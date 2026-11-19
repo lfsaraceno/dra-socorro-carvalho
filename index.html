@@ -17,6 +17,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Young+Serif&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/vendor/lenis.css">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // Olho 3D só no desktop (o hero vira uma coluna abaixo de 861px): o celular usa o logo animado
+    // e não baixa o Three.js. O main.js espera o evento "settled" se o arquivo ainda não chegou.
+    if (matchMedia('(min-width: 861px) and (prefers-reduced-motion: no-preference)').matches) {
+      var s3 = window.eye3dScript = document.createElement('script');
+      s3.src = 'assets/eye3d.js';
+      s3.onload = s3.onerror = function () { s3.done = true; s3.dispatchEvent(new Event('settled')); };
+      document.head.appendChild(s3);
+    }
+  </script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -88,8 +98,21 @@
             </div>
             <p class="hero-fact">Av. 13 de Maio, 1116, sala 501, Ed. Office Bradesco, Fátima</p>
           </div>
-          <div class="hero-eye" aria-hidden="true">
-            <svg class="eye" viewBox="0 0 240 120">
+          <div class="hero-eye">
+            <!-- Com o olho 3D, o scroll mostra uma peça por vez, na mesma ordem dos rótulos -->
+            <ol class="eye-parts" aria-label="Partes do olho">
+              <li><strong>Córnea</strong> A janela transparente na frente do olho. Protege e faz a maior parte do foco da luz.</li>
+              <li><strong>Íris</strong> A parte colorida. Abre e fecha para controlar quanta luz entra.</li>
+              <li><strong>Pupila</strong> A abertura no centro da íris, por onde a luz passa.</li>
+              <li><strong>Cristalino</strong> A lente natural do olho, que ajusta o foco de perto e de longe. Quando fica opaco, é a catarata.</li>
+              <li><strong>Corpo ciliar</strong> Músculo em anel que muda a forma do cristalino e produz o humor aquoso.</li>
+              <li><strong>Humor vítreo</strong> Gel transparente que preenche o olho e mantém a forma dele.</li>
+              <li><strong>Retina</strong> Camada sensível à luz no fundo do olho. Transforma a imagem em sinais para o cérebro.</li>
+              <li><strong>Coroide</strong> Camada cheia de vasos entre a retina e a esclera. Leva oxigênio e nutrientes à retina.</li>
+              <li><strong>Esclera</strong> A parte branca. Camada externa firme que protege o olho e dá a forma dele.</li>
+              <li><strong>Nervo óptico</strong> Leva os sinais da retina até o cérebro. No glaucoma, é ele que sofre o dano.</li>
+            </ol>
+            <svg class="eye" viewBox="0 0 240 120" aria-hidden="true">
               <g class="lid lid-up"><use href="#lid-up"/></g>
               <g class="iris">
                 <ellipse cx="128" cy="62" rx="23.75" ry="19.25" fill="#d7dc26"/>
@@ -345,7 +368,6 @@
   <script src="assets/vendor/gsap.min.js" defer></script>
   <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
   <script src="assets/vendor/lenis.min.js" defer></script>
-  <script src="assets/eye3d.js" defer></script>
   <script src="main.js" defer></script>
 </body>
 </html>
