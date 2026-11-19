@@ -125,12 +125,12 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .aperture-copy > p { max-width: 46ch; color: var(--ink-soft); font-size: 1.2rem; }
 
 /* O retrato faz o papel da íris; as pinceladas do logo ficam acima e abaixo.
-   Lid SVG: 130% da largura, proporção 2:1, íris do logo em x=53% */
+   Lid SVG: 170% da largura, proporção 2:1, íris do logo em x=53% (left = 50% - 53,3% de 170%) */
 .portrait { position: relative; margin: 14% 0 10%; width: min(100%, 420px); justify-self: center; }
 .portrait img { border-radius: 50%; aspect-ratio: 1; object-fit: cover; object-position: 50% 30%; width: 100%; }
-.portrait-lid { position: absolute; left: -19%; width: 130%; height: auto; pointer-events: none; overflow: visible; }
-.portrait-lid-up { top: -25%; }
-.portrait-lid-down { top: 50%; }
+.portrait-lid { position: absolute; left: -40.7%; width: 170%; height: auto; pointer-events: none; overflow: visible; }
+.portrait-lid-up { top: -27%; }
+.portrait-lid-down { top: 35%; }
 
 .doctors { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; border-top: 1px solid var(--line); }
 .doctors li { display: grid; gap: 2px; padding: 18px 0; border-bottom: 1px solid var(--line); }
@@ -146,7 +146,7 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 }
 .motion .aperture-tint {
   display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(circle at var(--cx, 50%) var(--cy, 50%), oklch(0.9 0.16 118), oklch(0.8 0.17 118));
+  background: #d7dc26; /* mesma cor da íris do logo */
 }
 .motion .aperture-grid { position: relative; }
 

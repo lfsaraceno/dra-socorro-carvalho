@@ -11,7 +11,7 @@
   <meta property="og:image" content="https://lfsaraceno.github.io/dra-socorro-carvalho/assets/dra-socorro.jpg">
   <meta property="og:url" content="https://lfsaraceno.github.io/dra-socorro-carvalho/">
   <meta property="og:locale" content="pt_BR">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Young+Serif&display=swap" rel="stylesheet">
@@ -38,29 +38,16 @@
 <body>
   <!-- Peças do logo, reaproveitadas no hero, nos retratos e no rodapé -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <linearGradient id="copper" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#c77a3a"/>
-        <stop offset=".55" stop-color="#b0612a"/>
-        <stop offset="1" stop-color="#9c5022"/>
-      </linearGradient>
-      <radialGradient id="irisFill" cx=".42" cy=".38" r=".7">
-        <stop offset="0" stop-color="#e3ef6a"/>
-        <stop offset=".6" stop-color="#c3d63a"/>
-        <stop offset="1" stop-color="#a9bd22"/>
-      </radialGradient>
-    </defs>
+    <!-- Pálpebras recortadas de assets/logo.png (escala 0,25; íris do logo em 128,62) -->
     <symbol id="lid-up" viewBox="0 0 240 120">
-      <path fill="url(#copper)" d="M4 66 C 44 30, 118 8, 236 6 C 198 18, 152 26, 120 35 C 82 46, 44 58, 4 66 Z"/>
-      <path fill="none" stroke="#e39a5a" stroke-opacity=".45" stroke-width="1.2" d="M30 54 C 80 30, 150 16, 214 11 M60 46 C 110 30, 160 22, 200 17"/>
+      <image href="assets/lid-up.png" x="79.125" y="21.625" width="146.75" height="34.5"/>
     </symbol>
     <symbol id="lid-down" viewBox="0 0 240 120">
-      <path fill="url(#copper)" d="M8 86 C 48 112, 118 118, 176 92 C 136 101, 80 100, 8 86 Z"/>
-      <path fill="none" stroke="#e39a5a" stroke-opacity=".45" stroke-width="1.2" d="M30 94 C 70 108, 120 110, 160 98"/>
+      <image href="assets/lid-down.png" x="37.875" y="76.125" width="121.5" height="23.75"/>
     </symbol>
     <symbol id="eye-mark" viewBox="0 0 240 120">
       <use href="#lid-up"/>
-      <circle cx="128" cy="62" r="22" fill="url(#irisFill)"/>
+      <ellipse cx="128" cy="62" rx="23.75" ry="19.25" fill="#d7dc26"/>
       <use href="#lid-down"/>
     </symbol>
   </svg>
@@ -104,8 +91,7 @@
             <svg class="eye" viewBox="0 0 240 120">
               <g class="lid lid-up"><use href="#lid-up"/></g>
               <g class="iris">
-                <circle cx="128" cy="62" r="22" fill="url(#irisFill)"/>
-                <g class="iris-threads" stroke="#8fa31a" stroke-opacity=".55" stroke-width=".7" stroke-linecap="round"></g>
+                <ellipse cx="128" cy="62" rx="23.75" ry="19.25" fill="#d7dc26"/>
               </g>
               <g class="lid lid-down"><use href="#lid-down"/></g>
             </svg>

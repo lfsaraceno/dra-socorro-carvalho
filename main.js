@@ -4,22 +4,6 @@
   onScrollHeader();
   window.addEventListener('scroll', onScrollHeader, { passive: true });
 
-  // Fios da íris (textura bordada do logo)
-  const threads = document.querySelector('.iris-threads');
-  if (threads) {
-    const ns = 'http://www.w3.org/2000/svg';
-    for (let i = 0; i < 48; i++) {
-      const a = (i / 48) * Math.PI * 2 + (i % 2) * 0.05;
-      const r1 = 7 + (i % 3) * 2, r2 = 20.5 - (i % 4);
-      const l = document.createElementNS(ns, 'line');
-      l.setAttribute('x1', (128 + Math.cos(a) * r1).toFixed(2));
-      l.setAttribute('y1', (62 + Math.sin(a) * r1).toFixed(2));
-      l.setAttribute('x2', (128 + Math.cos(a) * r2).toFixed(2));
-      l.setAttribute('y2', (62 + Math.sin(a) * r2).toFixed(2));
-      threads.appendChild(l);
-    }
-  }
-
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce || !window.gsap || !window.ScrollTrigger) return; // conteúdo já é visível sem movimento
 
@@ -53,11 +37,11 @@
   const geom = () => {
     const a = intro.getBoundingClientRect();
     const s = eyeSvg.getBoundingClientRect();
-    const k = s.width / 240; // viewBox 240x120; íris em (128, 62), r 22
+    const k = s.width / 240; // viewBox 240x120; íris elíptica em (128, 62), rx 23,75 ry 19,25
     const cx = s.left + 128 * k - a.left;
     const cy = s.top + 62 * k - a.top;
     const far = Math.hypot(Math.max(cx, a.width - cx), Math.max(cy, a.height - cy));
-    return { cx, cy, r0: 22 * k, r1: far + 40 };
+    return { cx, cy, r1: far + 40 };
   };
   let g = geom();
   const place = () => {
@@ -86,7 +70,8 @@
     .fromTo('.lid-up', { y: 0, rotate: 0 }, { y: -70, rotate: -4, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
     .fromTo('.lid-down', { y: 0, rotate: 0 }, { y: 60, rotate: 3, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
     .to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.35 }, 0.05)
-    .fromTo(aperture, { '--r': () => g.r0 + 'px' }, { '--r': () => g.r1 + 'px', duration: 0.6, ease: 'power2.in' }, 0.12)
+    // começa em 0: parada no topo, a borda do recorte desenharia um anel fino sobre a íris
+    .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.6, ease: 'power2.in' }, 0.12)
     .to('.aperture-tint', { opacity: 0, duration: 0.25 }, 0.5)
     .from('.portrait img', { scale: 1.25, duration: 0.5 }, 0.3)
     .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.25, ease: 'power2.out' }, 0.62)
