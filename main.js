@@ -19,27 +19,48 @@
   }
 
   const ease = 'expo.out';
-
-  // 1. Entrada: o olho pisca uma vez e o texto sobe
-  gsap.timeline({ defaults: { ease } })
-    // y em unidades do viewBox (240x120); yPercent em SVG <use> mede o símbolo inteiro e trava
-    .fromTo('.lid-up', { y: 24, rotate: 3 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
-    .fromTo('.lid-down', { y: -18, rotate: -2 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
-    .from('.iris', { scale: 0.4, opacity: 0, duration: 1.2 }, 0.35)
-    .from('.hero-copy > *', { y: 28, opacity: 0, duration: 1, stagger: 0.08 }, 0.1);
-
-  // 2. Scroll: as pálpebras se abrem e a íris vira a janela para a seção das médicas
   const intro = document.querySelector('.intro');
   const aperture = document.querySelector('.aperture');
   const eyeSvg = document.querySelector('.eye');
 
+  // Olho 3D (assets/eye3d.js). Sem WebGL, o logo em SVG continua no lugar.
+  let eye3d = null;
+  const host3d = document.querySelector('.hero-3d');
+  if (window.Eye3D && host3d && Eye3D.supported()) {
+    try {
+      eye3d = Eye3D.create(host3d, { anchor: document.querySelector('.hero-eye') });
+      document.documentElement.classList.add('has-3d');
+    } catch (err) { eye3d = null; }
+  }
+  const s3d = { intro: 0, focus: 0, explode: 0, labels: 0, rot: 0, dolly: 0 };
+  const push3d = () => eye3d && eye3d.update(s3d);
+
+  // 1. Entrada: o olho aparece (3D) ou pisca uma vez (SVG) e o texto sobe
+  const entry = gsap.timeline({ defaults: { ease } });
+  if (eye3d) {
+    push3d();
+    entry.to(s3d, { intro: 1, duration: 1.6, onUpdate: push3d }, 0.1);
+  } else {
+    entry
+      // y em unidades do viewBox (240x120); yPercent em SVG <use> mede o símbolo inteiro e trava
+      .fromTo('.lid-up', { y: 24, rotate: 3 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
+      .fromTo('.lid-down', { y: -18, rotate: -2 }, { y: 0, rotate: 0, duration: 1.1 }, 0.15)
+      .from('.iris', { scale: 0.4, opacity: 0, duration: 1.2 }, 0.35);
+  }
+  entry.from('.hero-copy > *', { y: 28, opacity: 0, duration: 1, stagger: 0.08 }, 0.1);
+
+  // 2. Scroll: SVG = pálpebras abrem; 3D = volta de 360° com as peças separadas e mergulho na pupila.
+  // Nos dois casos um círculo cresce a partir da íris e revela a seção das médicas.
   // Mede pelo SVG (sem transform), não pela íris, que pode estar no meio da animação de entrada
   const geom = () => {
     const a = intro.getBoundingClientRect();
-    const s = eyeSvg.getBoundingClientRect();
-    const k = s.width / 240; // viewBox 240x120; íris elíptica em (128, 62), rx 23,75 ry 19,25
-    const cx = s.left + 128 * k - a.left;
-    const cy = s.top + 62 * k - a.top;
+    let cx = a.width / 2, cy = Math.min(a.height, window.innerHeight) / 2; // 3D: a pupila termina no centro da tela
+    if (!eye3d) {
+      const s = eyeSvg.getBoundingClientRect();
+      const k = s.width / 240; // viewBox 240x120; íris elíptica em (128, 62), rx 23,75 ry 19,25
+      cx = s.left + 128 * k - a.left;
+      cy = s.top + 62 * k - a.top;
+    }
     const far = Math.hypot(Math.max(cx, a.width - cx), Math.max(cy, a.height - cy));
     return { cx, cy, r1: far + 40 };
   };
@@ -57,15 +78,34 @@
     scrollTrigger: {
       trigger: intro,
       start: 'top top',
-      end: '+=170%',
+      end: eye3d ? '+=480%' : '+=170%',
       pin: true,
       scrub: 0.6,
       invalidateOnRefresh: true,
       onRefreshInit: () => { gsap.set(aperture, { '--r': '0px' }); },
-      onRefresh: place,
+      onRefresh: () => { place(); if (eye3d) eye3d.resize(); },
     },
   });
-  open
+
+  if (eye3d) {
+    const t = (vars, at) => open.to(s3d, { ...vars, onUpdate: push3d }, at);
+    t({ focus: 1, duration: 0.12, ease: 'power2.inOut' }, 0);
+    open.to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.1 }, 0.02);
+    t({ rot: Math.PI * 2, duration: 0.54, ease: 'power1.inOut' }, 0.08);
+    t({ explode: 1, duration: 0.2, ease: 'power2.inOut' }, 0.1);
+    t({ labels: 1, duration: 0.08 }, 0.24);
+    t({ labels: 0, duration: 0.06 }, 0.52);
+    t({ explode: 0, duration: 0.12, ease: 'power2.inOut' }, 0.56);
+    t({ dolly: 1, duration: 0.2, ease: 'power1.in' }, 0.68);
+    open
+      .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.12, ease: 'power2.in' }, 0.84)
+      .to('.aperture-tint', { opacity: 0, duration: 0.1 }, 0.96)
+      .from('.portrait img', { scale: 1.2, duration: 0.14 }, 0.9)
+      .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.08, ease: 'power2.out' }, 1.0)
+      .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.08, ease: 'power2.out' }, 1.0)
+      .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.015, duration: 0.07, ease: 'power2.out' }, 1.0)
+      .to({}, { duration: 0.1 }); // pausa com a seção inteira na tela antes de soltar
+  } else open
     // fromTo explícito: o .to capturaria o estado meio-fechado da animação de entrada
     .fromTo('.lid-up', { y: 0, rotate: 0 }, { y: -70, rotate: -4, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)
     .fromTo('.lid-down', { y: 0, rotate: 0 }, { y: 60, rotate: 3, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0)

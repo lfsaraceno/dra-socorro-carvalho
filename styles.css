@@ -151,6 +151,41 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 }
 .motion .aperture-grid { position: relative; }
 
+/* Olho 3D: canvas atrás do texto do hero; o SVG fica só como reserva de espaço */
+.hero { position: relative; }
+.hero-grid { position: relative; z-index: 1; }
+.hero-3d { display: none; position: absolute; inset: 0; pointer-events: none; }
+.has-3d .hero-3d { display: block; }
+.has-3d .hero .eye { visibility: hidden; }
+.hero-3d canvas { display: block; width: 100%; height: 100%; }
+.has-3d.motion .aperture-tint { background: #040406; } /* a cor da pupila */
+.eye-labels { position: absolute; inset: 0; overflow: hidden; }
+.eye-label {
+  position: absolute; left: 0; top: 0; opacity: 0; white-space: nowrap;
+  font-size: .95rem; font-weight: 500; color: var(--ink); will-change: transform, opacity;
+  padding: 2px 8px; border-radius: 6px; background: oklch(1 0 0 / 0.88); /* legível sobre as peças */
+}
+/* o ponto marca a peça; o texto fica acima (is-up) ou abaixo (is-down), ligado por um traço */
+.eye-label::before, .eye-label::after { content: ""; position: absolute; left: 50%; }
+.eye-label::before { width: 1px; height: 20px; background: var(--ink-soft); }
+.eye-label::after { width: 5px; height: 5px; margin-left: -2px; border-radius: 50%; background: var(--copper); }
+.eye-label.is-up { translate: -50% calc(-100% - 22px); }
+.eye-label.is-up::before { top: 100%; }
+.eye-label.is-up::after { top: calc(100% + 19px); }
+.eye-label.is-down { translate: -50% 22px; }
+.eye-label.is-down::before { bottom: 100%; }
+.eye-label.is-down::after { bottom: calc(100% + 19px); }
+/* celular: peças empilhadas na vertical, rótulos dos lados */
+.eye-label.is-left, .eye-label.is-right { font-size: .85rem; }
+.eye-label.is-left::before, .eye-label.is-right::before { width: 16px; height: 1px; top: 50%; left: auto; }
+.eye-label.is-left::after, .eye-label.is-right::after { top: 50%; left: auto; margin: -2px 0 0; }
+.eye-label.is-right { translate: 22px -50%; }
+.eye-label.is-right::before { right: 100%; }
+.eye-label.is-right::after { right: calc(100% + 15px); }
+.eye-label.is-left { translate: calc(-100% - 22px) -50%; }
+.eye-label.is-left::before { left: 100%; }
+.eye-label.is-left::after { left: calc(100% + 15px); }
+
 /* Exames: sala escura */
 .exams { background: var(--night); color: var(--night-ink); padding-block: clamp(96px, 12vw, 160px); }
 .exams-stage { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 96px); }

@@ -4,14 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:eye": "esbuild src/eye3d.js --bundle --minify --format=iife --global-name=Eye3D --target=es2020 --legal-comments=none --outfile=assets/eye3d.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "playwright": "^1.65.1"
+    "esbuild": "^0.28.2",
+    "playwright": "^1.65.1",
+    "three": "^0.187.0"
   },
   "dependencies": {
     "gsap": "^3.15.1",
