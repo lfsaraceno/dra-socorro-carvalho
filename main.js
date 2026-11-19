@@ -32,14 +32,17 @@
       document.documentElement.classList.add('has-3d');
     } catch (err) { eye3d = null; }
   }
-  const s3d = { intro: 0, focus: 0, explode: 0, labels: 0, rot: 0, dolly: 0 };
+  // começa explodido, com a frente do olho virada para o texto
+  const ROT0 = -1.15;
+  const s3d = { intro: 0, explode: 1, labels: 1, rot: ROT0, dolly: 0 };
   const push3d = () => eye3d && eye3d.update(s3d);
 
   // 1. Entrada: o olho aparece (3D) ou pisca uma vez (SVG) e o texto sobe
   const entry = gsap.timeline({ defaults: { ease } });
   if (eye3d) {
     push3d();
-    entry.to(s3d, { intro: 1, duration: 1.6, onUpdate: push3d }, 0.1);
+    entry.to(s3d, { intro: 1, duration: 1.6, onUpdate: push3d }, 0.1)
+      .from('.eye-labels', { opacity: 0, duration: 0.8 }, 0.9);
   } else {
     entry
       // y em unidades do viewBox (240x120); yPercent em SVG <use> mede o símbolo inteiro e trava
@@ -78,7 +81,7 @@
     scrollTrigger: {
       trigger: intro,
       start: 'top top',
-      end: eye3d ? '+=480%' : '+=170%',
+      end: eye3d ? '+=380%' : '+=170%',
       pin: true,
       scrub: 0.6,
       invalidateOnRefresh: true,
@@ -89,21 +92,19 @@
 
   if (eye3d) {
     const t = (vars, at) => open.to(s3d, { ...vars, onUpdate: push3d }, at);
-    t({ focus: 1, duration: 0.12, ease: 'power2.inOut' }, 0);
-    open.to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.1 }, 0.02);
-    t({ rot: Math.PI * 2, duration: 0.54, ease: 'power1.inOut' }, 0.08);
-    t({ explode: 1, duration: 0.2, ease: 'power2.inOut' }, 0.1);
-    t({ labels: 1, duration: 0.08 }, 0.24);
-    t({ labels: 0, duration: 0.06 }, 0.52);
-    t({ explode: 0, duration: 0.12, ease: 'power2.inOut' }, 0.56);
-    t({ dolly: 1, duration: 0.2, ease: 'power1.in' }, 0.68);
+    // no lugar: as peças se juntam enquanto o olho vira de frente; depois a câmera entra pela pupila
+    t({ rot: 0, duration: 0.42, ease: 'power1.inOut' }, 0);
+    t({ labels: 0, duration: 0.1 }, 0.14);
+    t({ explode: 0, duration: 0.34, ease: 'power2.inOut' }, 0.06);
+    open.to('.hero-copy', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.1 }, 0.46);
+    t({ dolly: 1, duration: 0.24, ease: 'power1.in' }, 0.46);
     open
-      .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.12, ease: 'power2.in' }, 0.84)
-      .to('.aperture-tint', { opacity: 0, duration: 0.1 }, 0.96)
-      .from('.portrait img', { scale: 1.2, duration: 0.14 }, 0.9)
-      .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.08, ease: 'power2.out' }, 1.0)
-      .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.08, ease: 'power2.out' }, 1.0)
-      .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.015, duration: 0.07, ease: 'power2.out' }, 1.0)
+      .fromTo(aperture, { '--r': '0px' }, { '--r': () => g.r1 + 'px', duration: 0.12, ease: 'power2.in' }, 0.64)
+      .to('.aperture-tint', { opacity: 0, duration: 0.1 }, 0.76)
+      .from('.portrait img', { scale: 1.2, duration: 0.14 }, 0.7)
+      .from('.portrait-lid-up', { y: 40, opacity: 0, duration: 0.08, ease: 'power2.out' }, 0.8)
+      .from('.portrait-lid-down', { y: -40, opacity: 0, duration: 0.08, ease: 'power2.out' }, 0.8)
+      .from('.aperture-copy > *', { y: 30, opacity: 0, stagger: 0.015, duration: 0.07, ease: 'power2.out' }, 0.8)
       .to({}, { duration: 0.1 }); // pausa com a seção inteira na tela antes de soltar
   } else open
     // fromTo explícito: o .to capturaria o estado meio-fechado da animação de entrada

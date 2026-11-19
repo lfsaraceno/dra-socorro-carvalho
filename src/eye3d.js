@@ -205,8 +205,8 @@ export function create(host, { anchor } = {}) {
     return el;
   });
 
-  // Layout: ponto de partida (coluna do hero) e tamanho no centro
-  let W = 1, H = 1, dist = 7, halfH = 1, layout = { x0: 0, y0: 0, s0: 1, s1: 1, k: 0.7 };
+  // Layout: o olho fica sempre na coluna do hero (anchor); só a câmera se move no mergulho
+  let W = 1, H = 1, dist = 7, halfH = 1, layout = { x0: 0, y0: 0, sAs: 1, sEx: 1, k: 0.6, tall: false };
   const measure = () => {
     const box = host.getBoundingClientRect();
     W = Math.max(1, box.width); H = Math.max(1, box.height);
@@ -214,54 +214,55 @@ export function create(host, { anchor } = {}) {
     camera.aspect = W / H; camera.updateProjectionMatrix();
     halfH = dist * Math.tan(MathUtils.degToRad(FOV / 2));
     const px = (H / 2) / halfH; // pixels por unidade no plano do olho
-    // Tela em pé (celular): o olho gira no eixo horizontal e as peças se empilham na vertical
-    const tall = W / H < 0.8, k = 0.6;
+    const tall = W / H < 0.8, k = tall ? 0.45 : 0.6;
     const a = anchor ? anchor.getBoundingClientRect() : box;
     const cx = a.left + a.width / 2 - box.left, cy = a.top + a.height / 2 - box.top;
-    const s0 = Math.min(Math.min(a.width * 0.84, a.height * (tall ? 1.1 : 2)) / 2 / px, 1.4);
-    const span = 3.0 + 3.45 * k; // comprimento da vista explodida, em raios (com o nervo)
-    const s1 = tall
-      ? Math.min((W * 0.3) / px, (H * 0.74) / (span * px))
-      : Math.min((H * 0.27) / px, (W * 0.84) / (span * px));
-    layout = { x0: ((cx / W) * 2 - 1) * halfH * camera.aspect, y0: -((cy / H) * 2 - 1) * halfH, s0, s1, k, tall };
-    PARTS.forEach((p, i) => { labels[i].className = 'eye-label ' + (tall ? (p.up ? 'is-right' : 'is-left') : (p.up ? 'is-up' : 'is-down')); });
+    const sAs = Math.min(Math.min(a.width * 0.84, a.height * (tall ? 1.1 : 2)) / 2 / px, 1.4); // montado
+    const span = (3.0 + 3.45 * k) * 0.92; // comprimento da vista explodida, em raios (com o nervo, de leve na diagonal)
+    const room = Math.min(tall ? W - 32 : a.width * 1.15, 2 * (W - cx) - 48);
+    const sEx = Math.min(sAs, room / (span * px)); // explodido: cabe na coluna
+    layout = { x0: ((cx / W) * 2 - 1) * halfH * camera.aspect, y0: -((cy / H) * 2 - 1) * halfH, sAs, sEx, k, tall };
   };
 
   const v = new Vector3();
   const toScreen = (vec) => { v.copy(vec).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; };
-  let state = { intro: 1, focus: 0, explode: 0, labels: 0, rot: 0, dolly: 0 };
+  let state = { intro: 1, explode: 1, labels: 1, rot: 0, dolly: 0 };
   let queued = false;
+  const cam0 = new Vector3(), pw = new Vector3();
 
   const apply = () => {
-    const { intro, focus, explode: e, rot, dolly } = state;
-    const f = MathUtils.smootherstep(focus, 0, 1);
-    const s = MathUtils.lerp(layout.s0, layout.s1, f) * (0.88 + 0.12 * intro);
+    const { intro, explode: e, rot, dolly } = state;
+    const s = MathUtils.lerp(layout.sAs, layout.sEx, MathUtils.smootherstep(e, 0, 1)) * (0.9 + 0.1 * intro);
     eye.scale.setScalar(s);
-    eye.position.set(MathUtils.lerp(layout.x0, 0, f), MathUtils.lerp(layout.y0, 0, f), 0);
-    const spin = rot - (1 - intro) * 0.6;
-    if (layout.tall) eye.rotation.set(-spin, 0.24 * e, 0);
-    else eye.rotation.set(0.24 * e, spin, 0);
+    eye.position.set(layout.x0, layout.y0, 0);
+    // fora do centro da tela a perspectiva entorta a íris: o olho mira a câmera
+    const aimY = Math.atan2(-layout.x0, dist), aimX = Math.atan2(layout.y0, dist);
+    eye.rotation.set(aimX + 0.24 * e, aimY + rot - (1 - intro) * 0.5, 0);
     inner.position.z = 0.43 * e; // centraliza a vista explodida (o nervo pesa para trás)
     for (const p of PARTS) nodes[p.key].position.z = p.z + p.off * layout.k * e;
-    pupil.visible = e < 0.12;
-    // mergulho na pupila: a câmera avança até a pupila cobrir a tela
-    const pz = 0.86 * layout.s1, need = (0.13 * layout.s1 * 0.8) / (Math.tan(MathUtils.degToRad(FOV / 2)) * Math.max(1, camera.aspect));
-    const zEnd = pz + Math.max(need, 0.3 * layout.s1);
-    camera.position.set(0, 0, MathUtils.lerp(dist, zEnd, dolly * dolly));
-    camera.lookAt(0, 0, MathUtils.lerp(0, pz, dolly));
-    camera.updateMatrixWorld();
+    pupil.visible = e < 0.4; // explodido, o furo da íris fica aberto; montando, a retina vermelha apareceria por ele
     eye.updateMatrixWorld(true);
+    // mergulho: a câmera vai em linha reta até a pupila, que termina no centro da tela
+    pw.set(0, 0, 0.86); inner.localToWorld(pw);
+    const need = (0.13 * s * 0.8) / (Math.tan(MathUtils.degToRad(FOV / 2)) * Math.max(1, camera.aspect));
+    const endDist = Math.max(need, 0.3 * s), d2 = dolly * dolly;
+    cam0.set(0, 0, dist);
+    const total = cam0.distanceTo(pw);
+    camera.position.copy(pw).lerp(cam0, MathUtils.lerp(1, endDist / total, d2));
+    v.set(0, 0, 0).lerp(pw, MathUtils.smoothstep(dolly, 0, 0.6));
+    camera.lookAt(v);
+    camera.updateMatrixWorld();
     const side = MathUtils.smoothstep(Math.abs(Math.sin(rot)), 0.35, 0.8); // de frente os rótulos se sobrepõem
     PARTS.forEach((p, i) => {
-      const el = labels[i], o = state.labels * side;
+      // celular: sem espaço para 7 rótulos acima do título
+      const el = labels[i], o = layout.tall ? 0 : state.labels * side;
       el.style.opacity = o.toFixed(3);
       if (o < 0.01) return;
-      const d = (p.up ? 1 : -1) * p.r * 1.04;
-      if (layout.tall) v.set(d, 0, nodes[p.key].position.z); else v.set(0, d, nodes[p.key].position.z);
+      v.set(0, (p.up ? 1 : -1) * p.r * 1.04, nodes[p.key].position.z);
       inner.localToWorld(v);
       let [x, y] = toScreen(v);
-      // tela estreita: o ponto entra na peça para o texto não sair da tela
-      if (layout.tall) { const lw = el.offsetWidth + 30; x = p.up ? Math.min(x, W - lw) : Math.max(x, lw); }
+      const half = el.offsetWidth / 2 + 8; // o texto nunca sai da tela
+      x = Math.min(Math.max(x, half), W - half);
       el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
     });
   };
